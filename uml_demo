@@ -1,0 +1,36 @@
+@startuml
+actor Client1 as client1
+actor Client2 as client2
+participant messenger as m 
+database mongo as mongo
+queue kafka as kafka
+participant fusion_server as f
+
+client1 -> m:connect 
+m --> client1 :  connect success 
+client1 -> m : join doc
+m --> client1 : join success 
+client2 -> m : connect 
+m --> client2 : connect success 
+client2 -> m : join doc
+m --> client2 : join success 
+client1 -> m : send changeset01 2001
+
+m -> m: 判断权限
+activate m 
+deactivate m
+
+messenger->mongo: save imessage
+m->kafka:send kafka
+f--> kafka:receive kafka
+
+f->f:merge msg
+activate f
+client1->m: "2013查询消息状态"
+deactivate f
+f-->kafka: merge success
+m -> kafka: receive merge success
+m->client1 : 2006
+m->client2 : 2010
+@enduml
+
